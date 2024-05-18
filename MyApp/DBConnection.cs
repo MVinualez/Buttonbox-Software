@@ -13,21 +13,33 @@ namespace MyApp
     {
         private readonly string mongoDbUrl;
         private readonly MongoClient client;
+        private readonly IMongoDatabase database;
 
         public DBConnection() {
             mongoDbUrl = ConfigurationManager.AppSettings["MongoDbUrl"];
             client = new MongoClient(mongoDbUrl);
+            database = client.GetDatabase(ConfigurationManager.AppSettings["MongoDbName"]);
         }
-        public void connect()
-        {
-            IMongoDatabase database = client.GetDatabase(ConfigurationManager.AppSettings["MongoDbName"]);
-            IMongoCollection<BsonDocument> collection = database.GetCollection<BsonDocument>("data");
 
-            // Afficher tous les documents de la collection
+        public List<BsonDocument> GetDocuments()
+        {
+            IMongoCollection<BsonDocument> collection = database.GetCollection<BsonDocument>("data");
             var documents = collection.Find(new BsonDocument()).ToList();
-            foreach (var doc in documents)
+            Console.WriteLine(documents);
+            return documents;
+        }
+
+        public void AddDocument(BsonDocument document)
+        {
+            try
             {
-                Console.WriteLine(doc.ToJson());
+                var collection = database.GetCollection<BsonDocument>("data");
+                collection.InsertOne(document);
+                Console.WriteLine("Document ajouté avec succès.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de l'ajout du document : {ex.Message}");
             }
         }
     }

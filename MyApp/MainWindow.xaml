@@ -5,8 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MyApp"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="800" Icon="/icon.png">
     <Grid>
-        
+        <Button x:Name="btn_compile" Content="Compile" HorizontalAlignment="Left" Margin="20,20
+    ,0,0" VerticalAlignment="Top" Click="btn_compile_Click" RenderTransformOrigin="0.473,0.601"/>
+        <ComboBox x:Name="combobox_ports_list" HorizontalAlignment="Left" Margin="86,19,0,0" VerticalAlignment="Top" Width="120"/>
     </Grid>
 </Window>
