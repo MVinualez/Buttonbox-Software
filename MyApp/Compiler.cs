@@ -7,21 +7,26 @@ namespace MyApp
 {
     public class Compiler
     {
-        public void InitializeArduinoCli() {
+        public void InitializeArduinoCli()
+        {
             string arduinoCliPath = GetArduinoCliPath();
             string configDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ArduinoCli");
-            if (!Directory.Exists(configDirectory)) {
+            if (!Directory.Exists(configDirectory))
+            {
                 Directory.CreateDirectory(configDirectory);
             }
 
             string arduinoCliConfigFile = Path.Combine(configDirectory, "arduino-cli.yaml");
-            if (!File.Exists(arduinoCliConfigFile)) {
+            if (!File.Exists(arduinoCliConfigFile))
+            {
                 // Configuration initiale
                 RunArduinoCliCommand("config init --additional-urls https://downloads.arduino.cc/packages/package_index.json");
 
                 // Sauvegarder le fichier de configuration
-                File.WriteAllText(arduinoCliConfigFile, ""); 
-            } else {
+                File.WriteAllText(arduinoCliConfigFile, "");
+            }
+            else
+            {
                 RunArduinoCliCommand("config init --overwrite --additional-urls https://downloads.arduino.cc/packages/package_index.json");
             }
 
@@ -30,23 +35,29 @@ namespace MyApp
             RunArduinoCliCommand("core install arduino:avr");
         }
 
-        private string GetArduinoCliPath() {
+        private string GetArduinoCliPath()
+        {
             string basePath = AppDomain.CurrentDomain.BaseDirectory;
             string arduinoCliPath = Path.Combine(basePath, "..", "..", "src", "arduino-cli.exe");
             arduinoCliPath = Path.GetFullPath(arduinoCliPath);
             return arduinoCliPath;
         }
 
-        public void RunArduinoCliCommand(string arguments) {
-            try {
+        public bool RunArduinoCliCommand(string arguments)
+        {
+            try
+            {
                 string arduinoCliPath = GetArduinoCliPath();
-                if (!File.Exists(arduinoCliPath)) {
+                if (!File.Exists(arduinoCliPath))
+                {
                     MessageBox.Show($"arduino-cli.exe introuvable à l'emplacement : {arduinoCliPath}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
+                    return false;
                 }
 
-                Process process = new Process {
-                    StartInfo = new ProcessStartInfo {
+                Process process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
                         FileName = arduinoCliPath,
                         Arguments = arguments,
                         RedirectStandardOutput = true,
@@ -63,42 +74,68 @@ namespace MyApp
 
                 Console.WriteLine($"Commande exécutée : {arduinoCliPath} {arguments}");
                 Console.WriteLine($"Sortie : {output}");
-                if(error != "") {
-                    Console.WriteLine($"Erreur : {error}");
+                Console.WriteLine($"Erreur : {error}");
 
-                }
-
-                if (process.ExitCode != 0) {
-                    // Afficher uniquement en cas d'erreur
+                if (process.ExitCode != 0)
+                {
                     MessageBox.Show($"Erreur lors de l'exécution de la commande '{arguments}': {error}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return false;
+                }
+                else
+                {
+                    Console.WriteLine(output);
+                    return true;
                 }
             }
-            catch (Exception ex) {
-                // Afficher l'exception dans la console
-                Console.WriteLine($"Erreur : {ex.Message}");
-                // Afficher une boîte de dialogue avec l'exception
+            catch (Exception ex)
+            {
                 MessageBox.Show($"Erreur : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
             }
         }
 
-        public void CompileAndUploadSketch(string sketchPath, string fqbn, string port) {
-            try {
-                if (!File.Exists(sketchPath)) {
+        public void CompileAndUploadSketch(string sketchPath, string fqbn, string port)
+        {
+            try
+            {
+                if (!File.Exists(sketchPath))
+                {
                     MessageBox.Show($"Sketch introuvable à l'emplacement : {sketchPath}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
+                // Créer un dossier temporaire pour la compilation
+                string tempDir = Path.Combine(Path.GetTempPath(), "ArduinoBuild");
+                if (!Directory.Exists(tempDir))
+                {
+                    Directory.CreateDirectory(tempDir);
+                }
+
                 // Commande pour la compilation
-                string compileArgs = $"compile --fqbn {fqbn} {sketchPath}";
-                RunArduinoCliCommand(compileArgs);
+                string compileArgs = $"compile --fqbn {fqbn} --build-path \"{tempDir}\" \"{sketchPath}\"";
+                bool compileSuccess = RunArduinoCliCommand(compileArgs);
+
+                if (!compileSuccess)
+                {
+                    MessageBox.Show("Échec de la compilation. Veuillez vérifier les erreurs et réessayer.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
 
                 // Commande pour le téléversement
-                string uploadArgs = $"upload -p {port} --fqbn {fqbn} {sketchPath}";
-                RunArduinoCliCommand(uploadArgs);
+                string uploadArgs = $"upload -p {port} --fqbn {fqbn} --input-dir \"{tempDir}\"";
+                bool uploadSuccess = RunArduinoCliCommand(uploadArgs);
 
-                MessageBox.Show("Téléversement réussi !", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                if (uploadSuccess)
+                {
+                    MessageBox.Show("Téléversement réussi !", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Échec du téléversement. Veuillez vérifier les erreurs et réessayer.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 MessageBox.Show($"Erreur : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
