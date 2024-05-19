@@ -3,69 +3,59 @@ using System.Windows;
 using System.IO.Ports;
 using System.Management;
 using System.Windows.Controls;
-
+using System.IO;
 
 namespace MyApp
 {
-    /// <summary>
-    /// Logique d'interaction pour MainWindow.xaml
-    /// </summary>
-    public partial class MainWindow : Window 
-    {
+    public partial class MainWindow : Window {
         private readonly DBConnection db;
         private ManagementEventWatcher creationWatcher;
         private ManagementEventWatcher deletionWatcher;
+        private Compiler compiler;
 
-        public MainWindow()
-        {
+        public MainWindow() {
             InitializeComponent();
 
             db = new DBConnection();
+            compiler = new Compiler();
+
+            compiler.InitializeArduinoCli();
 
             updatePortsList();
             StartDeviceWatcher();
         }
 
-        private void updatePortsList() {
+        private void updatePortsList()
+        {
             combobox_ports_list.Items.Clear();
             string[] ports = SerialPort.GetPortNames();
 
-            foreach (string port in ports)
-            {
+            foreach (string port in ports) {
                 // Recherche des informations du périphérique associé à ce port COM
-                ManagementObjectSearcher searcher = new ManagementObjectSearcher("SELECT * FROM Win32_PnPEntity WHERE Name LIKE '%" + port + "%'");
+                ManagementObjectSearcher searcher = new ManagementObjectSearcher($"SELECT * FROM Win32_PnPEntity WHERE Name LIKE '%{port}%'");
                 string deviceName = "";
-                foreach (ManagementObject device in searcher.Get())
-                {
+                foreach (ManagementObject device in searcher.Get()) {
                     // Récupérer le nom du périphérique
                     deviceName = device["Name"].ToString();
                     // Retirer la mention "COM..." du nom du périphérique
                     int comIndex = deviceName.LastIndexOf("(COM");
-                    if (comIndex != -1)
-                    {
+                    if (comIndex != -1) {
                         deviceName = deviceName.Substring(0, comIndex).Trim();
-                        // Vérifier si la partie restante est un nombre (pour COM10 et supérieur)
-                        string[] splitName = deviceName.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        if (splitName.Length > 0 && int.TryParse(splitName[splitName.Length - 1], out _))
-                        {
-                            // Si le dernier élément est un nombre, retirer également cette partie
-                            deviceName = string.Join(" ", splitName, 0, splitName.Length - 1);
-                        }
                     }
                     break; // Sortir après avoir trouvé le premier périphérique
                 }
 
                 // Création de l'élément ComboBoxItem pour le port COM
-                ComboBoxItem portItem = new ComboBoxItem();
-                portItem.Content = $"{port} - {deviceName}";
+                ComboBoxItem portItem = new ComboBoxItem {
+                    Content = $"{port} - {deviceName}"
+                };
 
                 // Ajout du port COM à la liste déroulante
                 combobox_ports_list.Items.Add(portItem);
             }
         }
 
-        private void StartDeviceWatcher()
-        {
+        private void StartDeviceWatcher() {
             // Création de requêtes WMI pour surveiller les évènements de branchements et débranchements de périphériques
             string creationQuery = "SELECT * FROM __InstanceCreationEvent WITHIN 2 WHERE TargetInstance ISA 'Win32_PnPEntity'";
             string deletionQuery = "SELECT * FROM __InstanceDeletionEvent WITHIN 2 WHERE TargetInstance ISA 'Win32_PnPEntity'";
@@ -88,24 +78,36 @@ namespace MyApp
             deletionWatcher.Start();
         }
 
-        private void Window_Closed(object sender, EventArgs e)
-        {
+        private void Window_Closed(object sender, EventArgs e) {
             // Arrêter la surveillance des événements lorsque la fenêtre est fermée
-            if (creationWatcher != null)
-            {
-                creationWatcher.Stop();
-                creationWatcher.Dispose();
-            }
+            creationWatcher?.Stop();
+            creationWatcher?.Dispose();
 
-            if (deletionWatcher != null)
-            {
-                deletionWatcher.Stop();
-                deletionWatcher.Dispose();
-            }
+            deletionWatcher?.Stop();
+            deletionWatcher?.Dispose();
         }
 
-        private void btn_compile_Click(object sender, RoutedEventArgs e) {
+        private void btn_refresh_Click(object sender, RoutedEventArgs e) {
             updatePortsList();
+        }
+
+        private void btn_upload_Click(object sender, RoutedEventArgs e) {
+
+            if (combobox_ports_list.SelectedItem == null) {
+                MessageBox.Show("Veuillez sélectionner un port.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            string sketchPath = @"C:\Users\2428150\source\repos\MyApp\MyApp\Blink\blink.ino";
+            string fqbn = "arduino:avr:uno"; // Remplacez par votre carte Arduino
+            ComboBoxItem selectedPortItem = (ComboBoxItem)combobox_ports_list.SelectedItem;
+            string selectedPort = selectedPortItem.Content.ToString().Split('-')[0].Trim();
+
+            if (File.Exists(sketchPath)) {
+                compiler.CompileAndUploadSketch(sketchPath, fqbn, selectedPort);
+            } else {
+                MessageBox.Show($"Sketch introuvable à l'emplacement : {sketchPath}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }

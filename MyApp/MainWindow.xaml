@@ -7,8 +7,10 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800" Icon="/icon.png">
     <Grid>
-        <Button x:Name="btn_compile" Content="Compile" HorizontalAlignment="Left" Margin="20,20
-    ,0,0" VerticalAlignment="Top" Click="btn_compile_Click" RenderTransformOrigin="0.473,0.601"/>
-        <ComboBox x:Name="combobox_ports_list" HorizontalAlignment="Left" Margin="86,19,0,0" VerticalAlignment="Top" Width="120"/>
+        <Button Name="btn_select_file" Content="Select File" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Click="btn_select_file_Click"/>
+        <ComboBox Name="combobox_ports_list" HorizontalAlignment="Left" VerticalAlignment="Top" Width="120" Margin="10,50,0,0"/>
+        <Button Name="btn_refresh" Content="Refresh Ports" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="140,50,0,0" Click="btn_refresh_Click"/>
+        <Button Name="btn_upload" Content="Upload" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="240,50,0,0" Click="btn_upload_Click"/>
+        <TextBox Name="txt_sketch_path" HorizontalAlignment="Left" VerticalAlignment="Top" Width="400" Margin="10,100,0,0" IsReadOnly="True"/>
     </Grid>
 </Window>
