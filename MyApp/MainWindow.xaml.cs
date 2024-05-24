@@ -6,17 +6,14 @@ using System.Management;
 using System.Windows.Controls;
 using System.IO;
 
-namespace MyApp
-{
-    public partial class MainWindow : Window
-    {
+namespace MyApp {
+    public partial class MainWindow : Window {
         private readonly DBConnection db;
         private ManagementEventWatcher creationWatcher;
         private ManagementEventWatcher deletionWatcher;
         private Compiler compiler;
 
-        public MainWindow()
-        {
+        public MainWindow() {
             InitializeComponent();
 
             db = new DBConnection();
@@ -28,18 +25,15 @@ namespace MyApp
             StartDeviceWatcher();
         }
 
-        private void updatePortsList()
-        {
+        private void updatePortsList() {
             combobox_ports_list.Items.Clear();
             string[] ports = SerialPort.GetPortNames();
 
-            foreach (string port in ports)
-            {
+            foreach (string port in ports) {
                 // Recherche des informations du périphérique associé à ce port COM
                 ManagementObjectSearcher searcher = new ManagementObjectSearcher($"SELECT * FROM Win32_PnPEntity WHERE Name LIKE '%{port}%'");
                 string deviceName = "";
-                foreach (ManagementObject device in searcher.Get())
-                {
+                foreach (ManagementObject device in searcher.Get()) {
                     // Récupérer le nom du périphérique
                     deviceName = device["Name"].ToString();
                     // Retirer la mention "COM..." du nom du périphérique
@@ -62,8 +56,7 @@ namespace MyApp
             }
         }
 
-        private void StartDeviceWatcher()
-        {
+        private void StartDeviceWatcher() {
             // Création de requêtes WMI pour surveiller les évènements de branchements et débranchements de périphériques
             string creationQuery = "SELECT * FROM __InstanceCreationEvent WITHIN 2 WHERE TargetInstance ISA 'Win32_PnPEntity'";
             string deletionQuery = "SELECT * FROM __InstanceDeletionEvent WITHIN 2 WHERE TargetInstance ISA 'Win32_PnPEntity'";
@@ -86,8 +79,7 @@ namespace MyApp
             deletionWatcher.Start();
         }
 
-        private void Window_Closed(object sender, EventArgs e)
-        {
+        private void Window_Closed(object sender, EventArgs e) {
             // Arrêter la surveillance des événements lorsque la fenêtre est fermée
             creationWatcher?.Stop();
             creationWatcher?.Dispose();
@@ -96,26 +88,32 @@ namespace MyApp
             deletionWatcher?.Dispose();
         }
 
-        private void btn_refresh_Click(object sender, RoutedEventArgs e)
-        {
+        private void btn_refresh_Click(object sender, RoutedEventArgs e) {
             updatePortsList();
         }
 
-        private void btn_upload_Click(object sender, RoutedEventArgs e)
-        {
+        private void btn_upload_Click(object sender, RoutedEventArgs e) {
             string sketchPath = txt_sketch_path.Text;
-            string fqbn = "arduino:avr:uno"; // Remplacez par votre carte Arduino
             ComboBoxItem selectedPortItem = (ComboBoxItem)combobox_ports_list.SelectedItem;
             string selectedPort = selectedPortItem?.Content.ToString().Split('-')[0].Trim();
 
-            if (!string.IsNullOrEmpty(sketchPath) && File.Exists(sketchPath))
-            {
+            if (string.IsNullOrEmpty(selectedPort)) {
+                MessageBox.Show("Aucun port sélectionné", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            string fqbn = compiler.DetectBoard(selectedPort);
+            if (string.IsNullOrEmpty(fqbn)) {
+                MessageBox.Show("Impossible de détecter le type de carte. Assurez-vous qu'une carte est connectée et réessayez.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(sketchPath) && File.Exists(sketchPath)) {
                 string sketchDirectory = Path.GetDirectoryName(sketchPath);
                 string sketchName = Path.GetFileNameWithoutExtension(sketchPath);
 
                 // Vérifie si le fichier est déjà dans un dossier portant le même nom
-                if (Path.GetFileName(sketchDirectory) != sketchName)
-                {
+                if (Path.GetFileName(sketchDirectory) != sketchName) {
                     string newDirectory = Path.Combine(Path.GetDirectoryName(sketchDirectory), sketchName);
                     Directory.CreateDirectory(newDirectory);
                     string newSketchPath = Path.Combine(newDirectory, Path.GetFileName(sketchPath));
@@ -124,22 +122,18 @@ namespace MyApp
                 }
 
                 compiler.CompileAndUploadSketch(sketchPath, fqbn, selectedPort);
-            }
-            else
-            {
+            } else {
                 MessageBox.Show($"Sketch introuvable à l'emplacement : {sketchPath}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         private void btn_select_file_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog
-            {
+            OpenFileDialog openFileDialog = new OpenFileDialog {
                 Filter = "Sketch Files (*.ino)|*.ino|All Files (*.*)|*.*"
             };
 
-            if (openFileDialog.ShowDialog() == true)
-            {
+            if (openFileDialog.ShowDialog() == true) {
                 txt_sketch_path.Text = openFileDialog.FileName;
             }
         }
