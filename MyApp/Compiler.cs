@@ -2,9 +2,24 @@
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace MyApp {
     public class Compiler {
+        private ProgressBar progressBar;
+        private TextBox consoleTextBox;
+
+        // Méthode pour initialiser la barre de progression et la console
+        public void InitializeUI(ProgressBar progressBar, TextBox consoleTextBox) {
+            this.progressBar = progressBar;
+            this.consoleTextBox = consoleTextBox;
+        }
+
+        public void ResetUI() {
+            progressBar.Value = 0;
+            consoleTextBox.Clear();
+        }
+
         public void InitializeArduinoCli() {
             string arduinoCliPath = GetArduinoCliPath();
             string configDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ArduinoCli");
@@ -59,9 +74,14 @@ namespace MyApp {
                 string error = process.StandardError.ReadToEnd();
                 process.WaitForExit();
 
-                Console.WriteLine($"Commande exécutée : {arduinoCliPath} {arguments}");
-                Console.WriteLine($"Sortie : {output}");
-                Console.WriteLine($"Erreur : {error}");
+                AppendToConsole($"Commande exécutée : {arduinoCliPath} {arguments}");
+                AppendToConsole($"Sortie : {output}");
+                if (error.Length > 0) {
+                    AppendToConsole($"Erreur : {error}");
+                }
+
+                // Mise à jour de la barre de progression
+                progressBar.Value = process.ExitCode == 0 ? 100 : 0;
 
                 if (process.ExitCode != 0) {
                     MessageBox.Show($"Erreur lors de l'exécution de la commande '{arguments}': {error}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -150,6 +170,10 @@ namespace MyApp {
             }
 
             return null; // Si aucune carte n'est détectée sur ce port
+        }
+
+        private void AppendToConsole(string text) {
+            consoleTextBox.AppendText(text + Environment.NewLine);
         }
     }
 }

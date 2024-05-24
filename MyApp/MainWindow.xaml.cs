@@ -19,7 +19,9 @@ namespace MyApp {
             db = new DBConnection();
             compiler = new Compiler();
 
+            compiler.InitializeUI(progressBar, txt_console);
             compiler.InitializeArduinoCli();
+            compiler.ResetUI();
 
             updatePortsList();
             StartDeviceWatcher();

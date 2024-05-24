@@ -5,12 +5,37 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MyApp"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" Icon="/icon.png">
+        Title="Arduino Sketch Uploader" Height="500" Width="800" Icon="/icon.png">
+
     <Grid>
-        <Button Name="btn_select_file" Content="Select File" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Click="btn_select_file_Click"/>
-        <ComboBox Name="combobox_ports_list" HorizontalAlignment="Left" VerticalAlignment="Top" Width="120" Margin="10,50,0,0"/>
-        <Button Name="btn_refresh" Content="Refresh Ports" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="140,50,0,0" Click="btn_refresh_Click"/>
-        <Button Name="btn_upload" Content="Upload" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="240,50,0,0" Click="btn_upload_Click"/>
-        <TextBox Name="txt_sketch_path" HorizontalAlignment="Left" VerticalAlignment="Top" Width="400" Margin="10,100,0,0" IsReadOnly="True"/>
+        <!-- Header -->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,20,0,0">
+            <TextBlock FontSize="24" FontWeight="Bold"><Run Language="fr-fr" Text="ButtonBox Software"/></TextBlock>
+            <Image Source="./icon.png" Width="40" Height="40" Margin="10,0,0,0"/>
+        </StackPanel>
+
+        <!-- Select File Button -->
+        <Button Name="btn_select_file" Content="Select File" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top" Width="100" Height="30" Click="btn_select_file_Click"/>
+
+        <!-- Ports ComboBox -->
+        <ComboBox Name="combobox_ports_list" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Margin="120,70,0,0"/>
+
+        <!-- Refresh Button -->
+        <Button Name="btn_refresh" Content="Refresh" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="10,120,0,0" Click="btn_refresh_Click"/>
+
+        <!-- Upload Button -->
+        <Button Name="btn_upload" Content="Upload" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="90,120,0,0" Click="btn_upload_Click"/>
+
+        <!-- Sketch Path TextBox -->
+        <TextBox Name="txt_sketch_path" HorizontalAlignment="Left" VerticalAlignment="Top" Width="400" Margin="10,180,0,0" IsReadOnly="True"/>
+
+        <!-- Status TextBlock -->
+        <TextBlock Name="txt_status" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,220,0,0" FontSize="14" FontWeight="Bold"/>
+
+        <!-- Console -->
+        <TextBox Name="txt_console" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="10,250,10,0" Height="150" IsReadOnly="True"/>
+
+        <!-- Progress Bar -->
+        <ProgressBar Name="progressBar" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="10,410,10,0" Height="20" Minimum="0" Maximum="100" Value="0"/>
     </Grid>
 </Window>
