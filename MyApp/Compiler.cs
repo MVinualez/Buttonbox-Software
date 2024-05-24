@@ -41,6 +41,7 @@ namespace MyApp {
             // Vérification de la mise à jour des cores
             RunArduinoCliCommand("core update-index");
             RunArduinoCliCommand("core install arduino:avr");
+            RunArduinoCliCommand("core install esp32:esp32");
         }
 
         private string GetArduinoCliPath() {

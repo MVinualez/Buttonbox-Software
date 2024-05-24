@@ -40,16 +40,14 @@ namespace MyApp {
                     deviceName = device["Name"].ToString();
                     // Retirer la mention "COM..." du nom du périphérique
                     int comIndex = deviceName.LastIndexOf("(COM");
-                    if (comIndex != -1)
-                    {
+                    if (comIndex != -1) {
                         deviceName = deviceName.Substring(0, comIndex).Trim();
                     }
                     break; // Sortir après avoir trouvé le premier périphérique
                 }
 
                 // Création de l'élément ComboBoxItem pour le port COM
-                ComboBoxItem portItem = new ComboBoxItem
-                {
+                ComboBoxItem portItem = new ComboBoxItem {
                     Content = $"{port} - {deviceName}"
                 };
 
@@ -129,8 +127,7 @@ namespace MyApp {
             }
         }
 
-        private void btn_select_file_Click(object sender, RoutedEventArgs e)
-        {
+        private void btn_select_file_Click(object sender, RoutedEventArgs e) {
             OpenFileDialog openFileDialog = new OpenFileDialog {
                 Filter = "Sketch Files (*.ino)|*.ino|All Files (*.*)|*.*"
             };
